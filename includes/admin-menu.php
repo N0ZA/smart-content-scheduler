@@ -33,6 +33,51 @@ class SCS_Admin_Menu {
         
         add_submenu_page(
             'smart-scheduler',
+            __('ML & NLP', 'smart-scheduler'),
+            __('ML & NLP', 'smart-scheduler'),
+            'manage_options',
+            'smart-scheduler-ml-nlp',
+            [$this, 'ml_nlp_page']
+        );
+        
+        add_submenu_page(
+            'smart-scheduler',
+            __('Social Media', 'smart-scheduler'),
+            __('Social Media', 'smart-scheduler'),
+            'manage_options',
+            'smart-scheduler-social',
+            [$this, 'social_media_page']
+        );
+        
+        add_submenu_page(
+            'smart-scheduler',
+            __('A/B Testing', 'smart-scheduler'),
+            __('A/B Testing', 'smart-scheduler'),
+            'manage_options',
+            'smart-scheduler-ab-testing',
+            [$this, 'ab_testing_page']
+        );
+        
+        add_submenu_page(
+            'smart-scheduler',
+            __('Seasonal Analysis', 'smart-scheduler'),
+            __('Seasonal Analysis', 'smart-scheduler'),
+            'manage_options',
+            'smart-scheduler-seasonal',
+            [$this, 'seasonal_analysis_page']
+        );
+        
+        add_submenu_page(
+            'smart-scheduler',
+            __('Competitor Analysis', 'smart-scheduler'),
+            __('Competitor Analysis', 'smart-scheduler'),
+            'manage_options',
+            'smart-scheduler-competitors',
+            [$this, 'competitor_analysis_page']
+        );
+        
+        add_submenu_page(
+            'smart-scheduler',
             __('Settings', 'smart-scheduler'),
             __('Settings', 'smart-scheduler'),
             'manage_options',
@@ -429,5 +474,267 @@ class SCS_Admin_Menu {
         }
         
         return __('No optimal time data available', 'smart-scheduler');
+    }
+    
+    // New admin pages for enhanced features
+    
+    public function ml_nlp_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Machine Learning & NLP Analysis', 'smart-scheduler'); ?></h1>
+            
+            <div class="scs-ml-nlp-dashboard">
+                <div class="scs-section">
+                    <h2><?php _e('Content Analysis', 'smart-scheduler'); ?></h2>
+                    <div class="scs-content-analyzer">
+                        <textarea id="content-to-analyze" placeholder="Enter content to analyze..." rows="6" style="width: 100%;"></textarea>
+                        <br><br>
+                        <input type="text" id="content-title" placeholder="Enter title..." style="width: 100%; margin-bottom: 10px;">
+                        <button id="analyze-content" class="button button-primary"><?php _e('Analyze Content', 'smart-scheduler'); ?></button>
+                        <button id="extract-keywords" class="button"><?php _e('Extract Keywords', 'smart-scheduler'); ?></button>
+                        <button id="predict-performance" class="button"><?php _e('Predict Performance', 'smart-scheduler'); ?></button>
+                    </div>
+                    <div id="analysis-results"></div>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('ML Model Training', 'smart-scheduler'); ?></h2>
+                    <p><?php _e('Train the machine learning model with your historical data to improve predictions.', 'smart-scheduler'); ?></p>
+                    <button id="train-ml-model" class="button button-secondary"><?php _e('Train Model', 'smart-scheduler'); ?></button>
+                    <div id="training-results"></div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    public function social_media_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Social Media Integration', 'smart-scheduler'); ?></h1>
+            
+            <div class="scs-social-dashboard">
+                <div class="scs-section">
+                    <h2><?php _e('Connected Platforms', 'smart-scheduler'); ?></h2>
+                    <div class="scs-social-platforms">
+                        <?php $this->render_social_platforms(); ?>
+                    </div>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Social Media Metrics', 'smart-scheduler'); ?></h2>
+                    <div id="social-metrics-container">
+                        <button id="sync-social-data" class="button"><?php _e('Sync Social Data', 'smart-scheduler'); ?></button>
+                        <div id="social-metrics-display"></div>
+                    </div>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Auto-Post Settings', 'smart-scheduler'); ?></h2>
+                    <form method="post" action="" id="auto-post-settings">
+                        <label>
+                            <input type="checkbox" name="auto_post_enabled" value="1"> 
+                            <?php _e('Automatically post to social media when content is published', 'smart-scheduler'); ?>
+                        </label>
+                        <br><br>
+                        <label><?php _e('Default Platforms:', 'smart-scheduler'); ?></label><br>
+                        <label><input type="checkbox" name="platforms[]" value="facebook"> Facebook</label><br>
+                        <label><input type="checkbox" name="platforms[]" value="twitter"> Twitter</label><br>
+                        <label><input type="checkbox" name="platforms[]" value="linkedin"> LinkedIn</label><br>
+                        <label><input type="checkbox" name="platforms[]" value="instagram"> Instagram</label><br>
+                        <br>
+                        <button type="submit" class="button button-primary"><?php _e('Save Settings', 'smart-scheduler'); ?></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    public function ab_testing_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('A/B Testing', 'smart-scheduler'); ?></h1>
+            
+            <div class="scs-ab-testing-dashboard">
+                <div class="scs-section">
+                    <h2><?php _e('Create New A/B Test', 'smart-scheduler'); ?></h2>
+                    <form id="create-ab-test" method="post">
+                        <table class="form-table">
+                            <tr>
+                                <th><?php _e('Test Name', 'smart-scheduler'); ?></th>
+                                <td><input type="text" name="test_name" required style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Test Type', 'smart-scheduler'); ?></th>
+                                <td>
+                                    <select name="test_type" required>
+                                        <option value=""><?php _e('Select Test Type', 'smart-scheduler'); ?></option>
+                                        <option value="title"><?php _e('Title Test', 'smart-scheduler'); ?></option>
+                                        <option value="content"><?php _e('Content Test', 'smart-scheduler'); ?></option>
+                                        <option value="timing"><?php _e('Timing Test', 'smart-scheduler'); ?></option>
+                                        <option value="platform"><?php _e('Platform Test', 'smart-scheduler'); ?></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Duration (days)', 'smart-scheduler'); ?></th>
+                                <td><input type="number" name="test_duration" value="7" min="1" max="30"></td>
+                            </tr>
+                        </table>
+                        
+                        <div id="variant-fields">
+                            <h3><?php _e('Variant A', 'smart-scheduler'); ?></h3>
+                            <textarea name="variant_a[content]" placeholder="Variant A content..." rows="4" style="width: 100%;"></textarea>
+                            
+                            <h3><?php _e('Variant B', 'smart-scheduler'); ?></h3>
+                            <textarea name="variant_b[content]" placeholder="Variant B content..." rows="4" style="width: 100%;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="button button-primary"><?php _e('Create A/B Test', 'smart-scheduler'); ?></button>
+                    </form>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Active Tests', 'smart-scheduler'); ?></h2>
+                    <div id="active-tests-list">
+                        <button id="load-ab-tests" class="button"><?php _e('Load Tests', 'smart-scheduler'); ?></button>
+                        <div id="ab-tests-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    public function seasonal_analysis_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Seasonal Pattern Analysis', 'smart-scheduler'); ?></h1>
+            
+            <div class="scs-seasonal-dashboard">
+                <div class="scs-section">
+                    <h2><?php _e('Current Season Analysis', 'smart-scheduler'); ?></h2>
+                    <div id="current-season-info">
+                        <button id="get-seasonal-insights" class="button button-primary"><?php _e('Get Current Seasonal Insights', 'smart-scheduler'); ?></button>
+                        <div id="seasonal-insights-display"></div>
+                    </div>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Seasonal Trends', 'smart-scheduler'); ?></h2>
+                    <div class="scs-trend-controls">
+                        <label><?php _e('Analysis Period:', 'smart-scheduler'); ?></label>
+                        <select id="trend-years">
+                            <option value="1"><?php _e('Last 1 Year', 'smart-scheduler'); ?></option>
+                            <option value="2"><?php _e('Last 2 Years', 'smart-scheduler'); ?></option>
+                            <option value="3"><?php _e('Last 3 Years', 'smart-scheduler'); ?></option>
+                        </select>
+                        <button id="analyze-trends" class="button"><?php _e('Analyze Trends', 'smart-scheduler'); ?></button>
+                    </div>
+                    <div id="seasonal-trends-display"></div>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Seasonal Recommendations', 'smart-scheduler'); ?></h2>
+                    <div id="seasonal-recommendations">
+                        <button id="get-seasonal-recommendations" class="button"><?php _e('Get Recommendations', 'smart-scheduler'); ?></button>
+                        <div id="recommendations-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    public function competitor_analysis_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Competitor Analysis', 'smart-scheduler'); ?></h1>
+            
+            <div class="scs-competitor-dashboard">
+                <div class="scs-section">
+                    <h2><?php _e('Add Competitor', 'smart-scheduler'); ?></h2>
+                    <form id="add-competitor" method="post">
+                        <table class="form-table">
+                            <tr>
+                                <th><?php _e('Competitor Name', 'smart-scheduler'); ?></th>
+                                <td><input type="text" name="competitor_name" required style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Website URL', 'smart-scheduler'); ?></th>
+                                <td><input type="url" name="website_url" required style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Industry', 'smart-scheduler'); ?></th>
+                                <td><input type="text" name="industry" style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Tracking Keywords', 'smart-scheduler'); ?></th>
+                                <td>
+                                    <textarea name="tracking_keywords" placeholder="Enter keywords separated by commas..." rows="3" style="width: 100%;"></textarea>
+                                    <p class="description"><?php _e('Keywords to track for this competitor', 'smart-scheduler'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <h3><?php _e('Social Media Profiles', 'smart-scheduler'); ?></h3>
+                        <table class="form-table">
+                            <tr>
+                                <th>Facebook</th>
+                                <td><input type="url" name="social_profiles[facebook]" style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th>Twitter</th>
+                                <td><input type="url" name="social_profiles[twitter]" style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th>LinkedIn</th>
+                                <td><input type="url" name="social_profiles[linkedin]" style="width: 100%;"></td>
+                            </tr>
+                            <tr>
+                                <th>Instagram</th>
+                                <td><input type="url" name="social_profiles[instagram]" style="width: 100%;"></td>
+                            </tr>
+                        </table>
+                        
+                        <button type="submit" class="button button-primary"><?php _e('Add Competitor', 'smart-scheduler'); ?></button>
+                    </form>
+                </div>
+                
+                <div class="scs-section">
+                    <h2><?php _e('Competitor Insights', 'smart-scheduler'); ?></h2>
+                    <div id="competitor-insights">
+                        <button id="get-competitor-insights" class="button"><?php _e('Get Insights', 'smart-scheduler'); ?></button>
+                        <button id="compare-performance" class="button"><?php _e('Compare Performance', 'smart-scheduler'); ?></button>
+                        <button id="get-content-gaps" class="button"><?php _e('Find Content Gaps', 'smart-scheduler'); ?></button>
+                        <div id="competitor-insights-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+    
+    private function render_social_platforms() {
+        $platforms = ['facebook', 'twitter', 'linkedin', 'instagram'];
+        
+        foreach ($platforms as $platform) {
+            $credentials = get_option("scs_social_{$platform}_credentials");
+            $connected = $credentials && $credentials['status'] === 'active';
+            
+            echo '<div class="scs-platform-card">';
+            echo '<h3>' . ucfirst($platform) . '</h3>';
+            
+            if ($connected) {
+                echo '<span class="scs-status connected">' . __('Connected', 'smart-scheduler') . '</span>';
+                echo '<button class="button disconnect-platform" data-platform="' . $platform . '">' . __('Disconnect', 'smart-scheduler') . '</button>';
+            } else {
+                echo '<span class="scs-status disconnected">' . __('Not Connected', 'smart-scheduler') . '</span>';
+                echo '<button class="button button-primary connect-platform" data-platform="' . $platform . '">' . __('Connect', 'smart-scheduler') . '</button>';
+            }
+            
+            echo '</div>';
+        }
     }
 }

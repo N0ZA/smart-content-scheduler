@@ -644,4 +644,525 @@ jQuery(document).ready(function($) {
         
         return helpTopics[topic] || 'Help content not available for this topic.';
     }
+    
+    // Enhanced features JavaScript
+    
+    // ML & NLP functionality
+    $('#analyze-content').on('click', function(e) {
+        e.preventDefault();
+        
+        var content = $('#content-to-analyze').val();
+        var title = $('#content-title').val();
+        
+        if (!content.trim()) {
+            alert('Please enter content to analyze.');
+            return;
+        }
+        
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Analyzing...');
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_analyze_content',
+            nonce: scs_ajax.nonce,
+            content: content,
+            title: title
+        }, function(response) {
+            if (response.success) {
+                displayContentAnalysis(response.data);
+            } else {
+                showNotice('Content analysis failed', 'error');
+            }
+        }).always(function() {
+            $btn.prop('disabled', false).text('Analyze Content');
+        });
+    });
+    
+    $('#extract-keywords').on('click', function(e) {
+        e.preventDefault();
+        
+        var content = $('#content-to-analyze').val();
+        var title = $('#content-title').val();
+        
+        if (!content.trim()) {
+            alert('Please enter content to analyze.');
+            return;
+        }
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_extract_keywords',
+            nonce: scs_ajax.nonce,
+            content: content,
+            title: title,
+            limit: 10
+        }, function(response) {
+            if (response.success) {
+                displayKeywords(response.data);
+            }
+        });
+    });
+    
+    $('#predict-performance').on('click', function(e) {
+        e.preventDefault();
+        
+        var content = $('#content-to-analyze').val();
+        var title = $('#content-title').val();
+        
+        if (!content.trim() || !title.trim()) {
+            alert('Please enter both title and content for prediction.');
+            return;
+        }
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_ml_predict_performance',
+            nonce: scs_ajax.nonce,
+            content: content,
+            title: title,
+            scheduled_time: new Date().toISOString()
+        }, function(response) {
+            if (response.success) {
+                displayPerformancePrediction(response.data);
+            }
+        });
+    });
+    
+    $('#train-ml-model').on('click', function(e) {
+        e.preventDefault();
+        
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Training Model...');
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_ml_train_model',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                $('#training-results').html('<div class="notice notice-success"><p>Model trained successfully! Training samples: ' + response.data.training_samples + ', Accuracy: ' + response.data.model_accuracy + '%</p></div>');
+            } else {
+                $('#training-results').html('<div class="notice notice-error"><p>Training failed: ' + response.data + '</p></div>');
+            }
+        }).always(function() {
+            $btn.prop('disabled', false).text('Train Model');
+        });
+    });
+    
+    // Social Media functionality
+    $('.connect-platform').on('click', function(e) {
+        e.preventDefault();
+        
+        var platform = $(this).data('platform');
+        var apiKey = prompt('Enter API Key for ' + platform + ':');
+        var apiSecret = prompt('Enter API Secret for ' + platform + ':');
+        var accessToken = prompt('Enter Access Token for ' + platform + ':');
+        
+        if (!apiKey || !apiSecret || !accessToken) {
+            alert('All fields are required to connect to ' + platform);
+            return;
+        }
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_connect_social_platform',
+            nonce: scs_ajax.nonce,
+            platform: platform,
+            api_key: apiKey,
+            api_secret: apiSecret,
+            access_token: accessToken
+        }, function(response) {
+            if (response.success) {
+                showNotice('Successfully connected to ' + platform, 'success');
+                location.reload();
+            } else {
+                showNotice('Failed to connect to ' + platform + ': ' + response.data, 'error');
+            }
+        });
+    });
+    
+    $('.disconnect-platform').on('click', function(e) {
+        e.preventDefault();
+        
+        var platform = $(this).data('platform');
+        
+        if (!confirm('Are you sure you want to disconnect from ' + platform + '?')) {
+            return;
+        }
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_disconnect_social_platform',
+            nonce: scs_ajax.nonce,
+            platform: platform
+        }, function(response) {
+            if (response.success) {
+                showNotice('Disconnected from ' + platform, 'success');
+                location.reload();
+            }
+        });
+    });
+    
+    $('#sync-social-data').on('click', function(e) {
+        e.preventDefault();
+        
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Syncing...');
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_sync_social_data',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                $('#social-metrics-display').html('<div class="notice notice-success"><p>Synced ' + response.data.synced_posts + ' posts across ' + response.data.synced_platforms.length + ' platforms</p></div>');
+            }
+        }).always(function() {
+            $btn.prop('disabled', false).text('Sync Social Data');
+        });
+    });
+    
+    // A/B Testing functionality
+    $('#create-ab-test').on('submit', function(e) {
+        e.preventDefault();
+        
+        var formData = $(this).serialize();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_create_ab_test',
+            nonce: scs_ajax.nonce,
+            ...Object.fromEntries(new URLSearchParams(formData))
+        }, function(response) {
+            if (response.success) {
+                showNotice('A/B test created successfully', 'success');
+                $('#create-ab-test')[0].reset();
+                loadABTests();
+            } else {
+                showNotice('Failed to create A/B test: ' + response.data, 'error');
+            }
+        });
+    });
+    
+    $('#load-ab-tests').on('click', function(e) {
+        e.preventDefault();
+        loadABTests();
+    });
+    
+    function loadABTests() {
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_get_ab_test_list',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                displayABTests(response.data);
+            }
+        });
+    }
+    
+    // Seasonal Analysis functionality
+    $('#get-seasonal-insights').on('click', function(e) {
+        e.preventDefault();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_get_seasonal_insights',
+            nonce: scs_ajax.nonce,
+            year: new Date().getFullYear()
+        }, function(response) {
+            if (response.success) {
+                displaySeasonalInsights(response.data);
+            }
+        });
+    });
+    
+    $('#analyze-trends').on('click', function(e) {
+        e.preventDefault();
+        
+        var years = $('#trend-years').val();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_analyze_seasonal_trends',
+            nonce: scs_ajax.nonce,
+            years: years
+        }, function(response) {
+            if (response.success) {
+                displaySeasonalTrends(response.data);
+            }
+        });
+    });
+    
+    $('#get-seasonal-recommendations').on('click', function(e) {
+        e.preventDefault();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_get_seasonal_recommendations',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                displaySeasonalRecommendations(response.data);
+            }
+        });
+    });
+    
+    // Competitor Analysis functionality
+    $('#add-competitor').on('submit', function(e) {
+        e.preventDefault();
+        
+        var formData = $(this).serialize();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_add_competitor',
+            nonce: scs_ajax.nonce,
+            ...Object.fromEntries(new URLSearchParams(formData))
+        }, function(response) {
+            if (response.success) {
+                showNotice('Competitor added successfully', 'success');
+                $('#add-competitor')[0].reset();
+            } else {
+                showNotice('Failed to add competitor: ' + response.data, 'error');
+            }
+        });
+    });
+    
+    $('#get-competitor-insights').on('click', function(e) {
+        e.preventDefault();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_get_competitor_insights',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                displayCompetitorInsights(response.data);
+            }
+        });
+    });
+    
+    $('#compare-performance').on('click', function(e) {
+        e.preventDefault();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_compare_performance',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                displayPerformanceComparison(response.data);
+            }
+        });
+    });
+    
+    $('#get-content-gaps').on('click', function(e) {
+        e.preventDefault();
+        
+        $.post(scs_ajax.ajax_url, {
+            action: 'scs_get_competitor_content_gaps',
+            nonce: scs_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                displayContentGaps(response.data);
+            }
+        });
+    });
+    
+    // Display functions for new features
+    function displayContentAnalysis(analysis) {
+        var html = '<div class="scs-analysis-results">';
+        html += '<h3>Content Analysis Results</h3>';
+        
+        // Readability
+        html += '<div class="scs-analysis-section">';
+        html += '<h4>Readability</h4>';
+        html += '<p>Flesch Score: ' + analysis.readability.flesch_score + ' (' + analysis.readability.flesch_level + ')</p>';
+        html += '<p>Grade Level: ' + analysis.readability.fk_grade + '</p>';
+        html += '<p>Words: ' + analysis.readability.words + ', Sentences: ' + analysis.readability.sentences + '</p>';
+        html += '</div>';
+        
+        // Sentiment
+        html += '<div class="scs-analysis-section">';
+        html += '<h4>Sentiment Analysis</h4>';
+        html += '<p>Score: ' + analysis.sentiment.score + ' (' + analysis.sentiment.label + ')</p>';
+        html += '<p>Positive words: ' + analysis.sentiment.positive_words + ', Negative words: ' + analysis.sentiment.negative_words + '</p>';
+        html += '</div>';
+        
+        // SEO Score
+        html += '<div class="scs-analysis-section">';
+        html += '<h4>SEO Score</h4>';
+        html += '<p>Overall SEO Score: ' + analysis.seo_score + '/100</p>';
+        html += '</div>';
+        
+        // Suggestions
+        if (analysis.suggestions && analysis.suggestions.length > 0) {
+            html += '<div class="scs-analysis-section">';
+            html += '<h4>Suggestions</h4>';
+            html += '<ul>';
+            analysis.suggestions.forEach(function(suggestion) {
+                html += '<li>' + suggestion + '</li>';
+            });
+            html += '</ul>';
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        
+        $('#analysis-results').html(html);
+    }
+    
+    function displayKeywords(keywords) {
+        var html = '<div class="scs-keywords-results">';
+        html += '<h3>Extracted Keywords</h3>';
+        html += '<div class="scs-keywords-list">';
+        
+        keywords.forEach(function(keyword) {
+            html += '<span class="scs-keyword-tag">' + keyword.word + ' (' + keyword.frequency + ')</span> ';
+        });
+        
+        html += '</div></div>';
+        
+        $('#analysis-results').append(html);
+    }
+    
+    function displayPerformancePrediction(prediction) {
+        var html = '<div class="scs-prediction-results">';
+        html += '<h3>Performance Prediction</h3>';
+        html += '<p><strong>Predicted Score:</strong> ' + prediction.predicted_score + '/100</p>';
+        html += '<p><strong>Confidence:</strong> ' + prediction.confidence + '%</p>';
+        
+        if (prediction.recommendations && prediction.recommendations.length > 0) {
+            html += '<h4>Recommendations</h4>';
+            html += '<ul>';
+            prediction.recommendations.forEach(function(rec) {
+                html += '<li>' + rec + '</li>';
+            });
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        
+        $('#analysis-results').append(html);
+    }
+    
+    function displayABTests(tests) {
+        var html = '<div class="scs-ab-tests-list">';
+        
+        if (tests.length === 0) {
+            html += '<p>No A/B tests found.</p>';
+        } else {
+            html += '<table class="wp-list-table widefat fixed striped">';
+            html += '<thead><tr><th>Test Name</th><th>Type</th><th>Status</th><th>Start Date</th><th>Actions</th></tr></thead>';
+            html += '<tbody>';
+            
+            tests.forEach(function(test) {
+                html += '<tr>';
+                html += '<td>' + test.test_name + '</td>';
+                html += '<td>' + test.test_type + '</td>';
+                html += '<td>' + test.status + '</td>';
+                html += '<td>' + test.start_date + '</td>';
+                html += '<td><button class="button view-test-results" data-test-id="' + test.id + '">View Results</button></td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+        }
+        
+        html += '</div>';
+        
+        $('#ab-tests-display').html(html);
+    }
+    
+    function displaySeasonalInsights(insights) {
+        var html = '<div class="scs-seasonal-insights">';
+        html += '<h3>Seasonal Insights for ' + insights.year + '</h3>';
+        html += '<p><strong>Current Season:</strong> ' + insights.current_season.name + ' (' + insights.current_season.progress + '% complete)</p>';
+        
+        if (insights.seasonal_performance && insights.seasonal_performance.best_season) {
+            html += '<p><strong>Best Performing Season:</strong> ' + insights.seasonal_performance.best_season + '</p>';
+            html += '<p><strong>Worst Performing Season:</strong> ' + insights.seasonal_performance.worst_season + '</p>';
+        }
+        
+        html += '</div>';
+        
+        $('#seasonal-insights-display').html(html);
+    }
+    
+    function displaySeasonalTrends(trends) {
+        var html = '<div class="scs-seasonal-trends">';
+        html += '<h3>Multi-Year Seasonal Trends</h3>';
+        // Add trend visualization here
+        html += '<p>Trend analysis completed for ' + Object.keys(trends.trends_by_year).length + ' years.</p>';
+        html += '</div>';
+        
+        $('#seasonal-trends-display').html(html);
+    }
+    
+    function displaySeasonalRecommendations(recommendations) {
+        var html = '<div class="scs-seasonal-recommendations">';
+        html += '<h3>Seasonal Recommendations</h3>';
+        
+        if (recommendations.timing) {
+            html += '<h4>Timing Recommendations</h4>';
+            html += '<ul>';
+            recommendations.timing.forEach(function(rec) {
+                html += '<li>' + rec + '</li>';
+            });
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        
+        $('#recommendations-display').html(html);
+    }
+    
+    function displayCompetitorInsights(insights) {
+        var html = '<div class="scs-competitor-insights">';
+        html += '<h3>Competitor Insights</h3>';
+        
+        if (insights.industry_benchmarks) {
+            html += '<h4>Industry Benchmarks</h4>';
+            html += '<ul>';
+            html += '<li>Average Posting Frequency: ' + insights.industry_benchmarks.avg_posting_frequency + '</li>';
+            html += '<li>Average Engagement Rate: ' + insights.industry_benchmarks.avg_engagement_rate + '</li>';
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        
+        $('#competitor-insights-display').html(html);
+    }
+    
+    function displayPerformanceComparison(comparison) {
+        var html = '<div class="scs-performance-comparison">';
+        html += '<h3>Performance Comparison</h3>';
+        
+        if (comparison.competitive_advantages && comparison.competitive_advantages.length > 0) {
+            html += '<h4>Your Competitive Advantages</h4>';
+            html += '<ul>';
+            comparison.competitive_advantages.forEach(function(advantage) {
+                html += '<li>' + advantage.metric + ': ' + advantage.advantage + ' better than competitors</li>';
+            });
+            html += '</ul>';
+        }
+        
+        if (comparison.performance_gaps && comparison.performance_gaps.length > 0) {
+            html += '<h4>Areas for Improvement</h4>';
+            html += '<ul>';
+            comparison.performance_gaps.forEach(function(gap) {
+                html += '<li>' + gap.metric + ': ' + gap.gap + ' behind competitors</li>';
+            });
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        
+        $('#competitor-insights-display').html(html);
+    }
+    
+    function displayContentGaps(gaps) {
+        var html = '<div class="scs-content-gaps">';
+        html += '<h3>Content Gap Analysis</h3>';
+        
+        if (gaps.topic_gaps) {
+            html += '<h4>Topic Gaps</h4>';
+            html += '<ul>';
+            gaps.topic_gaps.competitor_topics_missing.forEach(function(topic) {
+                html += '<li>' + topic + '</li>';
+            });
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        
+        $('#competitor-insights-display').html(html);
+    }
 });

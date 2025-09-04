@@ -1,0 +1,15 @@
+{
+    "name": "smart-content-scheduler/plugin",
+    "description": "AI-powered content scheduling with machine learning and NLP capabilities",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "SmartContentScheduler\\": "includes/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
