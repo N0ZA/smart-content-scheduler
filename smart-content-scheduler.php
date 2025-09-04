@@ -84,6 +84,7 @@ require_once SCS_PLUGIN_PATH . 'includes/admin-menu.php';
 require_once SCS_PLUGIN_PATH . 'includes/scheduler.php';
 require_once SCS_PLUGIN_PATH . 'includes/analytics.php';
 require_once SCS_PLUGIN_PATH . 'includes/ajax-handlers.php';
+require_once plugin_dir_path(__FILE__) . 'includes/ai/class-ai-modules.php';
 
 // Initialize the plugin
 add_action('plugins_loaded', 'scs_init');
