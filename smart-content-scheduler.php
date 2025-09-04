@@ -1,14 +1,12 @@
 <?php
 /**
- * Plugin Name: Smart Content Scheduler Pro
- * Plugin URI: https://yourwebsite.com/smart-content-scheduler
+ * Plugin Name: Smart Content Scheduler
  * Description: AI-powered content scheduling with performance tracking and automatic optimization
- * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://yourwebsite.com
+ * Version: 1.0.2
+ * Author: N0ZA
+ * Author URI: https://github.com/N0ZA/smart-content-scheduler
  * License: GPL2
  * Text Domain: smart-scheduler
- * Domain Path: /languages
  */
 
 // Prevent direct access
