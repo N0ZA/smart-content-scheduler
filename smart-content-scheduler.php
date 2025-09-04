@@ -1,119 +1,118 @@
 <?php
 /**
  * Plugin Name: Smart Content Scheduler
- * Description: AI-powered content scheduling with performance tracking and automatic optimization
- * Version: 1.0.2
+ * Plugin URI: https://github.com/N0ZA/smart-content-scheduler
+ * Description: AI-powered content scheduling and optimization for WordPress.
+ * Version: 1.0.0
  * Author: N0ZA
- * Author URI: https://github.com/N0ZA/smart-content-scheduler
- * License: GPL2
- * Text Domain: smart-scheduler
+ * Author URI: https://github.com/N0ZA
+ * License: GPL-2.0+
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain: smart-content-scheduler
+ * Domain Path: /languages
  */
 
-// Prevent direct access
-if (!defined('ABSPATH')) {
-    exit;
+// If this file is called directly, abort.
+if (!defined('WPINC')) {
+    die;
 }
 
 // Define plugin constants
-define('SCS_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('SCS_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('SCS_VERSION', '1.0.0');
+define('SCS_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('SCS_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('SCS_PLUGIN_BASENAME', plugin_basename(__FILE__));
+define('SCS_THEME_COLOR', '#7a1027');
 
-// Activation hook
-register_activation_hook(__FILE__, 'scs_activate_plugin');
-register_deactivation_hook(__FILE__, 'scs_deactivate_plugin');
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require_once SCS_PLUGIN_DIR . 'includes/class-smart-content-scheduler.php';
 
-function scs_activate_plugin() {
-    // Create database tables
-    scs_create_tables();
-    
-    // Set default options
-    add_option('scs_optimal_times', json_encode([
-        'monday' => ['09:00', '14:00', '19:00'],
-        'tuesday' => ['09:00', '14:00', '19:00'],
-        'wednesday' => ['09:00', '14:00', '19:00'],
-        'thursday' => ['09:00', '14:00', '19:00'],
-        'friday' => ['09:00', '14:00', '19:00'],
-        'saturday' => ['10:00', '15:00', '20:00'],
-        'sunday' => ['10:00', '15:00', '20:00']
-    ]));
-    
-    add_option('scs_auto_reschedule', 'yes');
-    add_option('scs_performance_threshold', 50);
-    
-    // Schedule cron events
-    if (!wp_next_scheduled('scs_check_performance')) {
-        wp_schedule_event(time(), 'hourly', 'scs_check_performance');
-    }
+/**
+ * Begins execution of the plugin.
+ */
+function run_smart_content_scheduler() {
+    $plugin = new Smart_Content_Scheduler();
+    $plugin->run();
 }
 
-function scs_deactivate_plugin() {
-    wp_clear_scheduled_hook('scs_check_performance');
-}
-
-function scs_create_tables() {
-    global $wpdb;
-    
-    $table_name = $wpdb->prefix . 'scs_analytics';
-    
-    $charset_collate = $wpdb->get_charset_collate();
-    
-    $sql = "CREATE TABLE $table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        post_id bigint(20) NOT NULL,
-        scheduled_time datetime NOT NULL,
-        published_time datetime DEFAULT NULL,
-        views int(11) DEFAULT 0,
-        clicks int(11) DEFAULT 0,
-        shares int(11) DEFAULT 0,
-        engagement_score float DEFAULT 0,
-        performance_rating varchar(20) DEFAULT 'pending',
-        created_at datetime DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id),
-        KEY post_id (post_id)
-    ) $charset_collate;";
-    
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql);
-}
-
-// Include required files
-require_once SCS_PLUGIN_PATH . 'includes/admin-menu.php';
-require_once SCS_PLUGIN_PATH . 'includes/scheduler.php';
-require_once SCS_PLUGIN_PATH . 'includes/analytics.php';
-require_once SCS_PLUGIN_PATH . 'includes/ajax-handlers.php';
-require_once plugin_dir_path(__FILE__) . 'includes/ai/class-ai-modules.php';
-
-// Initialize the plugin
-add_action('plugins_loaded', 'scs_init');
-
-function scs_init() {
-    // Load text domain
-    load_plugin_textdomain('smart-scheduler', false, dirname(plugin_basename(__FILE__)) . '/languages');
-    
-    // Initialize components
-    if (is_admin()) {
-        new SCS_Admin_Menu();
-    }
-    
-    new SCS_Scheduler();
-    new SCS_Analytics();
-    new SCS_Ajax_Handlers();
-}
-
-// Enqueue scripts and styles
-add_action('admin_enqueue_scripts', 'scs_enqueue_admin_scripts');
-
-function scs_enqueue_admin_scripts($hook) {
-    if (strpos($hook, 'smart-scheduler') === false && $hook !== 'post.php' && $hook !== 'post-new.php') {
+/**
+ * Load admin styles and scripts
+ */
+function scs_admin_enqueue_scripts($hook) {
+    // Only load on our plugin pages
+    if (strpos($hook, 'smart-content-scheduler') === false) {
         return;
     }
     
-    wp_enqueue_script('scs-admin', SCS_PLUGIN_URL . 'assets/admin.js', ['jquery'], SCS_VERSION, true);
-    wp_enqueue_style('scs-admin', SCS_PLUGIN_URL . 'assets/admin.css', [], SCS_VERSION);
+    wp_enqueue_style('scs-admin-styles', SCS_PLUGIN_URL . 'assets/css/admin.css', array(), SCS_VERSION);
+    wp_enqueue_script('scs-admin-script', SCS_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), SCS_VERSION, true);
     
-    wp_localize_script('scs-admin', 'scs_ajax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('scs_nonce')
-    ]);
+    // Pass variables to script
+    wp_localize_script('scs-admin-script', 'scsData', array(
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('scs-nonce'),
+        'isAIPowered' => true,
+        'messages' => array(
+            'processing' => __('AI is analyzing your content...', 'smart-content-scheduler'),
+            'success' => __('Analysis complete!', 'smart-content-scheduler'),
+            'error' => __('Error in AI processing. Please try again.', 'smart-content-scheduler'),
+        )
+    ));
 }
+add_action('admin_enqueue_scripts', 'scs_admin_enqueue_scripts');
+
+/**
+ * Add plugin admin menu
+ */
+function scs_add_admin_menu() {
+    $icon_url = SCS_PLUGIN_URL . 'assets/images/scs-icon.svg';
+    
+    add_menu_page(
+        __('Smart Content Scheduler', 'smart-content-scheduler'),
+        __('Smart Content', 'smart-content-scheduler'),
+        'manage_options',
+        'smart-content-scheduler',
+        'scs_admin_page',
+        $icon_url,
+        30
+    );
+    
+    add_submenu_page(
+        'smart-content-scheduler',
+        __('Dashboard', 'smart-content-scheduler'),
+        __('Dashboard', 'smart-content-scheduler'),
+        'manage_options',
+        'smart-content-scheduler',
+        'scs_admin_page'
+    );
+    
+    add_submenu_page(
+        'smart-content-scheduler',
+        __('AI Settings', 'smart-content-scheduler'),
+        __('AI Settings', 'smart-content-scheduler'),
+        'manage_options',
+        'scs-ai-settings',
+        'scs_ai_settings_page'
+    );
+}
+add_action('admin_menu', 'scs_add_admin_menu');
+
+/**
+ * Render admin main page
+ */
+function scs_admin_page() {
+    require_once SCS_PLUGIN_DIR . 'includes/admin/admin-dashboard.php';
+}
+
+/**
+ * Render AI settings page
+ */
+function scs_ai_settings_page() {
+    require_once SCS_PLUGIN_DIR . 'includes/admin/admin-ai-settings.php';
+}
+
+// Run the plugin
+run_smart_content_scheduler();
