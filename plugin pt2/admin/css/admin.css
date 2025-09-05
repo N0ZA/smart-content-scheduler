@@ -1,0 +1,398 @@
+/* A/B Testing */
+.scs-ab-content {
+    margin-top: 20px;
+}
+
+.scs-empty-state {
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.scs-modal {
+    display: none;
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.scs-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 70%;
+    max-width: 800px;
+    position: relative;
+}
+
+.scs-modal-large {
+    width: 80%;
+    max-width: 1000px;
+}
+
+.scs-modal-close {
+    color: #aaa;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.scs-modal-close:hover {
+    color: #000;
+}
+
+.scs-form-group {
+    margin-bottom: 20px;
+}
+
+.scs-form-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.scs-form-actions .button {
+    margin-left: 10px;
+}
+
+.scs-variant {
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.scs-variant h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.scs-variant-title-field,
+.scs-variant-content-field {
+    margin-bottom: 15px;
+}
+
+.scs-variant-title {
+    width: 100%;
+}
+
+.scs-variant-content {
+    width: 100%;
+    min-height: 100px;
+}
+
+.scs-traffic-split {
+    margin: 20px 0;
+}
+
+.scs-traffic-split-slider {
+    margin-bottom: 10px;
+}
+
+.scs-traffic-labels {
+    display: flex;
+    justify-content: space-between;
+}
+
+.scs-remove-variant {
+    margin-top: 10px;
+}
+
+/* Settings tabs */
+.scs-settings-tabs {
+    margin-top: 20px;
+}
+
+.scs-tabs-nav {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid #ccd0d4;
+}
+
+.scs-tabs-nav li {
+    margin: 0;
+}
+
+.scs-tabs-nav a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-bottom: none;
+    margin-bottom: -1px;
+    font-weight: 500;
+    color: #555;
+}
+
+.scs-tabs-nav a.active {
+    border-color: #ccd0d4;
+    background: #fff;
+    border-bottom-color: #fff;
+    color: #000;
+}
+
+.scs-tabs-content {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    padding: 20px;
+}
+
+.scs-tab {
+    display: none;
+}
+
+.scs-tab.active {
+    display: block;
+}
+
+/* API sections in settings */
+.scs-api-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.scs-api-section:last-child {
+    border-bottom: none;
+}
+
+.scs-api-section h3 {
+    margin-top: 0;
+}
+
+/* Advanced settings */
+.scs-advanced-section {
+    margin-bottom: 30px;
+}
+
+.scs-card {
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.scs-card h4 {
+    margin-top: 0;
+}
+
+.scs-repair-actions {
+    margin-top: 15px;
+}
+
+/* Calendar styles */
+.scs-calendar-container {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.scs-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.scs-calendar-navigation {
+    display: flex;
+    align-items: center;
+}
+
+.scs-calendar-title {
+    margin: 0 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.scs-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.scs-calendar-day-header {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px 0;
+    background: #f8f9fa;
+}
+
+.scs-calendar-day {
+    min-height: 120px;
+    border: 1px solid #eee;
+    padding: 5px;
+    position: relative;
+}
+
+.scs-calendar-day.today {
+    background-color: #e6f7ff;
+}
+
+.scs-calendar-day.other-month {
+    background-color: #f9f9f9;
+    color: #ccc;
+}
+
+.scs-calendar-day-number {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    line-height: 25px;
+    font-weight: bold;
+}
+
+.scs-calendar-day.today .scs-calendar-day-number {
+    background: #0073aa;
+    color: #fff;
+    border-radius: 50%;
+}
+
+.scs-calendar-event {
+    margin-top: 30px;
+    margin-bottom: 5px;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scs-calendar-event.ai-scheduled {
+    background-color: #d4edda;
+    border-left: 3px solid #155724;
+}
+
+.scs-calendar-event.manual {
+    background-color: #cce5ff;
+    border-left: 3px solid #004085;
+}
+
+.scs-calendar-event.rescheduled {
+    background-color: #fff3cd;
+    border-left: 3px solid #856404;
+}
+
+/* Analytics styles */
+.scs-analytics-filters {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.scs-filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.scs-filter-group {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.scs-filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.scs-filter-group select,
+.scs-filter-group input[type="date"] {
+    width: 100%;
+}
+
+.scs-filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.scs-analytics-charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.scs-chart-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 15px;
+    flex: 1 0 45%;
+}
+
+.scs-chart-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.scs-chart {
+    height: 300px;
+}
+
+.scs-analytics-tables {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 15px;
+}
+
+.scs-analytics-tables h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 782px) {
+    .scs-dashboard-widgets,
+    .scs-dashboard-tables {
+        flex-direction: column;
+    }
+    
+    .scs-dashboard-widget,
+    .scs-dashboard-table {
+        margin-bottom: 20px;
+    }
+    
+    .scs-score-details {
+        flex-direction: column;
+    }
+    
+    .scs-score-item {
+        margin-bottom: 10px;
+    }
+    
+    .scs-modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .scs-analytics-charts {
+        flex-direction: column;
+    }
+}
