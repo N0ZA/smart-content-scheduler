@@ -6,6 +6,14 @@
  * @package    Smart_Content_Scheduler
  */
 
+                // Import PHP-ML classes
+                use Phpml\Classification\SVC;
+                use Phpml\SupportVectorMachine\Kernel;
+                use Phpml\ModelManager;
+                use Phpml\Dataset\ArrayDataset;
+                use Phpml\Preprocessing\Normalizer;
+                
+                
 class Smart_Content_Scheduler_ML_Scheduler {
 
     /**
@@ -58,13 +66,7 @@ class Smart_Content_Scheduler_ML_Scheduler {
             if (class_exists('Phpml\Classification\SVC')) {
                 $this->ml_available = true;
                 
-                // Import PHP-ML classes
-                use Phpml\Classification\SVC;
-                use Phpml\SupportVectorMachine\Kernel;
-                use Phpml\ModelManager;
-                use Phpml\Dataset\ArrayDataset;
-                use Phpml\Preprocessing\Normalizer;
-                
+
                 // Initialize or load model
                 $this->init_model();
             }
