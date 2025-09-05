@@ -6,14 +6,6 @@
  * @package    Smart_Content_Scheduler
  */
 
-require_once SCS_PLUGIN_DIR . 'vendor/autoload.php'; // Composer autoload for PHP-ML
-
-use Phpml\Classification\SVC;
-use Phpml\SupportVectorMachine\Kernel;
-use Phpml\ModelManager;
-use Phpml\Dataset\ArrayDataset;
-use Phpml\Preprocessing\Normalizer;
-
 class Smart_Content_Scheduler_ML_Scheduler {
 
     /**
@@ -36,6 +28,13 @@ class Smart_Content_Scheduler_ML_Scheduler {
      * @var array
      */
     private $tables;
+    
+    /**
+     * Flag to check if ML libraries are available
+     *
+     * @var bool
+     */
+    private $ml_available = false;
 
     /**
      * Initialize the class
@@ -52,17 +51,37 @@ class Smart_Content_Scheduler_ML_Scheduler {
             'ab_tests' => $wpdb->prefix . 'scs_ab_tests',
         ];
         
-        // Initialize or load model
-        $this->init_model();
+        // Check if PHP-ML is available
+        if (file_exists(SCS_PLUGIN_DIR . 'vendor/autoload.php')) {
+            require_once SCS_PLUGIN_DIR . 'vendor/autoload.php';
+            
+            if (class_exists('Phpml\Classification\SVC')) {
+                $this->ml_available = true;
+                
+                // Import PHP-ML classes
+                use Phpml\Classification\SVC;
+                use Phpml\SupportVectorMachine\Kernel;
+                use Phpml\ModelManager;
+                use Phpml\Dataset\ArrayDataset;
+                use Phpml\Preprocessing\Normalizer;
+                
+                // Initialize or load model
+                $this->init_model();
+            }
+        }
     }
 
     /**
      * Initialize or load the ML model
      */
     private function init_model() {
+        if (!$this->ml_available) {
+            return;
+        }
+        
         if (file_exists($this->model_path)) {
             try {
-                $modelManager = new ModelManager();
+                $modelManager = new \Phpml\ModelManager();
                 $this->schedule_model = $modelManager->restoreFromFile($this->model_path);
             } catch (Exception $e) {
                 // If error loading model, create a new one
@@ -77,8 +96,12 @@ class Smart_Content_Scheduler_ML_Scheduler {
      * Create a new ML model
      */
     private function create_new_model() {
+        if (!$this->ml_available) {
+            return;
+        }
+        
         // Create a basic SVM model for scheduling
-        $this->schedule_model = new SVC(Kernel::RBF, 1.0, 3, 0.1);
+        $this->schedule_model = new \Phpml\Classification\SVC(\Phpml\SupportVectorMachine\Kernel::RBF, 1.0, 3, 0.1);
         
         // Save the initial model
         try {
@@ -86,7 +109,7 @@ class Smart_Content_Scheduler_ML_Scheduler {
                 mkdir(dirname($this->model_path), 0755, true);
             }
             
-            $modelManager = new ModelManager();
+            $modelManager = new \Phpml\ModelManager();
             $modelManager->saveToFile($this->schedule_model, $this->model_path);
         } catch (Exception $e) {
             error_log('Failed to save initial model: ' . $e->getMessage());
@@ -97,6 +120,11 @@ class Smart_Content_Scheduler_ML_Scheduler {
      * Train the ML models using collected data
      */
     public function train_models() {
+        if (!$this->ml_available) {
+            error_log('ML training skipped: PHP-ML library not available');
+            return false;
+        }
+        
         global $wpdb;
         
         // Get training data from our ML data table
@@ -148,19 +176,19 @@ class Smart_Content_Scheduler_ML_Scheduler {
         }
         
         // Normalize features
-        $normalizer = new Normalizer();
+        $normalizer = new \Phpml\Preprocessing\Normalizer();
         $samples = $normalizer->normalize($samples);
         
         // Create dataset
-        $dataset = new ArrayDataset($samples, $targets);
+        $dataset = new \Phpml\Dataset\ArrayDataset($samples, $targets);
         
         // Train model
-        $this->schedule_model = new SVC(Kernel::RBF, 1.0, 3, 0.1);
+        $this->schedule_model = new \Phpml\Classification\SVC(\Phpml\SupportVectorMachine\Kernel::RBF, 1.0, 3, 0.1);
         $this->schedule_model->train($samples, $targets);
         
         // Save model
         try {
-            $modelManager = new ModelManager();
+            $modelManager = new \Phpml\ModelManager();
             $modelManager->saveToFile($this->schedule_model, $this->model_path);
             
             return true;
@@ -178,6 +206,11 @@ class Smart_Content_Scheduler_ML_Scheduler {
      * @return array Array of optimal times with confidence scores
      */
     public function get_optimal_times($post_id, $post_data) {
+        // If ML is not available, use simple heuristics
+        if (!$this->ml_available) {
+            return $this->get_heuristic_times();
+        }
+        
         // Get post category
         $category = isset($post_data['category']) ? $post_data['category'] : $this->get_post_category($post_id);
         
@@ -203,7 +236,7 @@ class Smart_Content_Scheduler_ML_Scheduler {
         // Generate predictions for all hours in the next 7 days
         $optimal_times = [];
         $now = current_time('timestamp');
-        $normalizer = new Normalizer();
+        $normalizer = new \Phpml\Preprocessing\Normalizer();
         
         for ($day = 0; $day < 7; $day++) {
             $day_timestamp = $now + ($day * 86400);
@@ -255,6 +288,56 @@ class Smart_Content_Scheduler_ML_Scheduler {
         });
         
         // Return top 5 times
+        return array_slice($optimal_times, 0, 5);
+    }
+    
+    /**
+     * Get optimal times using simple heuristics when ML is not available
+     */
+    private function get_heuristic_times() {
+        $optimal_times = [];
+        $now = current_time('timestamp');
+        
+        // Common optimal publishing times based on general social media engagement patterns
+        $optimal_hours = [
+            1 => [9, 12, 15], // Monday: 9am, 12pm, 3pm
+            2 => [8, 10, 14], // Tuesday: 8am, 10am, 2pm
+            3 => [9, 13, 19], // Wednesday: 9am, 1pm, 7pm
+            4 => [8, 14, 18], // Thursday: 8am, 2pm, 6pm
+            5 => [9, 12, 15], // Friday: 9am, 12pm, 3pm
+            6 => [11, 14, 19], // Saturday: 11am, 2pm, 7pm
+            0 => [11, 15, 20]  // Sunday: 11am, 3pm, 8pm
+        ];
+        
+        // Generate times for the next 7 days
+        for ($day = 0; $day < 7; $day++) {
+            $day_timestamp = $now + ($day * 86400);
+            $day_of_week = (int) date('w', $day_timestamp);
+            
+            foreach ($optimal_hours[$day_of_week] as $hour) {
+                $timestamp = strtotime(date('Y-m-d', $day_timestamp) . ' ' . $hour . ':00:00');
+                
+                // Skip times that are in the past
+                if ($timestamp <= $now) {
+                    continue;
+                }
+                
+                $optimal_times[] = [
+                    'timestamp' => $timestamp,
+                    'datetime' => date('Y-m-d H:i:s', $timestamp),
+                    'confidence' => 0.5 + (mt_rand(0, 20) / 100), // Random confidence between 0.5-0.7
+                    'day_name' => date('l', $timestamp),
+                    'hour_display' => date('g:i A', $timestamp)
+                ];
+            }
+        }
+        
+        // Sort by timestamp (chronological order)
+        usort($optimal_times, function($a, $b) {
+            return $a['timestamp'] <=> $b['timestamp'];
+        });
+        
+        // Return up to 5 times
         return array_slice($optimal_times, 0, 5);
     }
 

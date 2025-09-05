@@ -6,8 +6,6 @@
  * @package    Smart_Content_Scheduler
  */
 
-require_once SCS_PLUGIN_DIR . 'vendor/autoload.php'; // Composer autoload
-
 class Smart_Content_Scheduler_NLP_Analyzer {
 
     /**
@@ -23,6 +21,13 @@ class Smart_Content_Scheduler_NLP_Analyzer {
      * @var string
      */
     private $api_key;
+    
+    /**
+     * Flag to check if ML libraries are available
+     *
+     * @var bool
+     */
+    private $ml_available = false;
 
     /**
      * Initialize the class
@@ -30,6 +35,15 @@ class Smart_Content_Scheduler_NLP_Analyzer {
     public function __construct() {
         $this->api_endpoint = get_option('scs_nlp_api_endpoint', 'https://api.example.com/nlp');
         $this->api_key = get_option('scs_nlp_api_key', '');
+        
+        // Check if PHP-ML is available
+        if (file_exists(SCS_PLUGIN_DIR . 'vendor/autoload.php')) {
+            require_once SCS_PLUGIN_DIR . 'vendor/autoload.php';
+            
+            if (class_exists('Phpml\Classification\SVC')) {
+                $this->ml_available = true;
+            }
+        }
     }
 
     /**

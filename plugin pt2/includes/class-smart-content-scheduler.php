@@ -52,8 +52,20 @@ class Smart_Content_Scheduler {
         $this->set_locale();
         $this->define_admin_hooks();
         $this->define_public_hooks();
-        $this->init_ml_components();
+        
+        // Only init ML components if the necessary libraries are available
+        if ($this->is_ml_available()) {
+            $this->init_ml_components();
+        }
+        
         $this->init_api_integrations();
+    }
+
+    /**
+     * Check if ML libraries are available
+     */
+    private function is_ml_available() {
+        return file_exists(SCS_PLUGIN_DIR . 'vendor/autoload.php');
     }
 
     /**
@@ -75,14 +87,22 @@ class Smart_Content_Scheduler {
         // Include the public class
         require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-public.php';
         
-        // Include ML components
+        // Include ML components - these will check for required libraries themselves
         require_once plugin_dir_path(dirname(__FILE__)) . 'ml/class-ml-scheduler.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'ml/class-nlp-analyzer.php';
         
         // Include API integrations
-        require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-social-api.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-competitor-api.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-data-collector.php';
+        if (file_exists(plugin_dir_path(dirname(__FILE__)) . 'api/class-social-api.php')) {
+            require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-social-api.php';
+        }
+        
+        if (file_exists(plugin_dir_path(dirname(__FILE__)) . 'api/class-competitor-api.php')) {
+            require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-competitor-api.php';
+        }
+        
+        if (file_exists(plugin_dir_path(dirname(__FILE__)) . 'api/class-data-collector.php')) {
+            require_once plugin_dir_path(dirname(__FILE__)) . 'api/class-data-collector.php';
+        }
         
         $this->loader = new Smart_Content_Scheduler_Loader();
     }
@@ -130,14 +150,21 @@ class Smart_Content_Scheduler {
      * @access   private
      */
     private function define_public_hooks() {
-        $plugin_public = new Smart_Content_Scheduler_Public($this->get_plugin_name(), $this->get_version());
+        if (class_exists('Smart_Content_Scheduler_Public')) {
+            $plugin_public = new Smart_Content_Scheduler_Public($this->get_plugin_name(), $this->get_version());
 
-        $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
-        $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
-        
-        // Track post views and engagement
-        $this->loader->add_action('wp_head', $plugin_public, 'track_post_view');
-        $this->loader->add_filter('the_content', $plugin_public, 'add_engagement_tracking');
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
+            $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
+            
+            // Track post views and engagement
+            if (method_exists($plugin_public, 'track_post_view')) {
+                $this->loader->add_action('wp_head', $plugin_public, 'track_post_view');
+            }
+            
+            if (method_exists($plugin_public, 'add_engagement_tracking')) {
+                $this->loader->add_filter('the_content', $plugin_public, 'add_engagement_tracking');
+            }
+        }
     }
 
     /**
@@ -158,7 +185,9 @@ class Smart_Content_Scheduler {
         }
         
         // Add hooks for content analysis
-        $this->loader->add_filter('content_save_pre', $nlp_analyzer, 'analyze_content_quality');
+        if (method_exists($nlp_analyzer, 'analyze_content_quality')) {
+            $this->loader->add_filter('content_save_pre', $nlp_analyzer, 'analyze_content_quality');
+        }
         
         // Add hooks for automatic rescheduling
         $this->loader->add_action('scs_check_performance', $ml_scheduler, 'check_and_reschedule');
@@ -175,22 +204,27 @@ class Smart_Content_Scheduler {
      * @access   private
      */
     private function init_api_integrations() {
-        $social_api = new Smart_Content_Scheduler_Social_API();
-        $competitor_api = new Smart_Content_Scheduler_Competitor_API();
-        $data_collector = new Smart_Content_Scheduler_Data_Collector();
-        
-        // Schedule social data collection
-        $this->loader->add_action('scs_collect_social_data', $social_api, 'collect_data');
-        
-        if (!wp_next_scheduled('scs_collect_social_data')) {
-            wp_schedule_event(time(), 'hourly', 'scs_collect_social_data');
+        // Only initialize components if they exist
+        if (class_exists('Smart_Content_Scheduler_Social_API')) {
+            $social_api = new Smart_Content_Scheduler_Social_API();
+            
+            // Schedule social data collection
+            $this->loader->add_action('scs_collect_social_data', $social_api, 'collect_data');
+            
+            if (!wp_next_scheduled('scs_collect_social_data')) {
+                wp_schedule_event(time(), 'hourly', 'scs_collect_social_data');
+            }
         }
         
-        // Schedule competitor data collection
-        $this->loader->add_action('scs_collect_competitor_data', $competitor_api, 'collect_data');
-        
-        if (!wp_next_scheduled('scs_collect_competitor_data')) {
-            wp_schedule_event(time(), 'daily', 'scs_collect_competitor_data');
+        if (class_exists('Smart_Content_Scheduler_Competitor_API')) {
+            $competitor_api = new Smart_Content_Scheduler_Competitor_API();
+            
+            // Schedule competitor data collection
+            $this->loader->add_action('scs_collect_competitor_data', $competitor_api, 'collect_data');
+            
+            if (!wp_next_scheduled('scs_collect_competitor_data')) {
+                wp_schedule_event(time(), 'daily', 'scs_collect_competitor_data');
+            }
         }
     }
 
